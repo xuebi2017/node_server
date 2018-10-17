@@ -35,8 +35,8 @@
 </head>
 <body>
     <div class="form-wrapper">
-        <h1>注册</h1>
-        <form action="" id="signUpForm">
+        <h1>登录</h1>
+        <form action="" id="signInForm">
             <div class="row">
                 <label for="">邮箱</label>
                 <input type="text" name="email">
@@ -54,11 +54,11 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
-        $form = $('#signUpForm')
+        $form = $('#signInForm')
         $form.submit((e) => {
             e.preventDefault()
             let hash = {}
-            let elements = ['email', 'password', 'password_confirmation']
+            let elements = ['email', 'password']
             for(element of elements) {
                 let value = $form.find(`[name=${element}]`).val()
                 hash[element] = value
@@ -76,31 +76,10 @@
                     .text('密码不能为空！')
                     return
             }
-            if(hash['password_confirmation'] === '') {
-                $form.find('[name="password_confirmation"]').siblings('.error')
-                    .text('确认密码不能为空！')
-                    return
-            }
-            if(hash['password_confirmation'] !== hash['password']) {
-                $form.find('[name="password_confirmation"]').siblings('.error')
-                    .text('密码不匹配！')
-                    return
-            }
-            $.post('./signup', hash).then((res) => {
-                console.log(res)
+            $.post('./signin', hash).then((res) => {
+                window.location.href = '/'
             }, (err) => {
-                console.log(err)
-                // let errorObj = JSON.parse(err.responseText)
-                // let {errors} = errorObj
-                let {errors} = err.responseJSON
-                console.log(errors)
-                if(errors.email && errors.email === 'invalid') {
-                    $form.find('[name="email"]').siblings('.error')
-                    .text('邮箱格式错误！')
-                }else if(errors.email && errors.email === 'in use') {
-                    $form.find('[name="email"]').siblings('.error')
-                    .text('该邮箱已被注册！')
-                }
+                alert('请输入正确的邮箱和密码！')
             })
         }) 
     </script>

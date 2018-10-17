@@ -23,14 +23,46 @@ var server = http.createServer(function(request, response){
   console.log('方方说：查询字符串为\n' + query)
   console.log('方方说：不含查询字符串的路径为\n' + pathNoQuery)
   console.log('path',path)
-  if(path === '/signup', method === 'GET') {
+  if(path === '/') {
+    let string = fs.readFileSync('./index.html', 'utf8')
+    let cookies = [], hash = {}
+    if(request.headers.cookie) {
+      cookies= request.headers.cookie.split('; ')
+      for(let cookie of cookies) {
+        let parts = cookie.split('=')
+        let key = parts[0]
+        let value = parts[1]
+        hash[key] = value
+      }
+    }
+    console.log('hash', hash)
+    let email = hash.sign_in_email
+    let users = fs.readFileSync('./db/users.json', 'utf8')
+    users = JSON.parse(users)
+    let foundUser = {}
+    for(let user of users) {
+      if(user.email === email) {
+        foundUser = user
+        break
+      }
+    }
+    if(Object.keys(foundUser).length === 0) {
+      string = string.replace('__password__', '不知道')      
+    }else {
+      string = string.replace('__password__', foundUser.password)      
+    }
+    response.statusCode = 200
+    response.setHeader('Content-Type', 'text/html;charset=utf-8')
+    response.write(string)
+    response.end()
+  }else if(path === '/signup' && method === 'GET') {
     console.log(11111111111)
     let string = fs.readFileSync('./signup.html', 'utf8')
     response.statusCode = 200
     response.setHeader('Content-Type', 'text/html;charset=utf-8')
     response.write(string)
     response.end()
-  }else if(path === '/signup', method === 'POST') {
+  }else if(path === '/signup' && method === 'POST') {
     console.log(222222222)
     readBody(request).then((body) => {
       let strings = body.split('&')
@@ -95,12 +127,53 @@ var server = http.createServer(function(request, response){
     }, (res) => {
       console.log(2222222222222222)
     })
-  }else if(path === '/signin') {
+  }else if(path === '/signin' && method === 'GET') {
     let string = fs.readFileSync('./signin.html', 'utf8')
     response.statusCode = 200
     response.setHeader('Content-Type', 'text/html;charset=utf-8')
     response.write(string)
     response.end()
+  }else if(path === '/signin' && method === 'POST') {
+    console.log(3333333)
+    readBody(request).then((body) => {
+      let strings = body.split('&')
+      let hash = {}
+      for(string of strings) {
+        let part = string.split('=')
+        let key = part[0]
+        let value = part[1]
+        hash[key] = decodeURIComponent(value)
+      }
+      console.log('hash', hash)
+      let {email, password} = hash
+      console.log('email',email)
+      console.log('password',password)
+      let users = fs.readFileSync('./db/users.json', 'utf8')
+      console.log('users111', users)
+      try {
+        users = JSON.parse(users)
+        console.log('users222',users)
+      }catch(e) {
+        users = []
+      }
+      let found = false
+      for(user of users) {
+        if(user.email === email && user.password === password) {
+          found = true
+          break
+        }
+      }
+      if(found) {
+        // Set-Cookie: <cookie-name>=<cookie-value> 
+        response.setHeader('Set-Cookie', `sign_in_email = ${email}; HttpOnly`)
+        response.statusCode = 200
+      }else {
+        response.statusCode = 401
+      }
+      response.end()
+    }, (res) => {
+      console.log(33333333333333)
+    })
   }
 
   function readBody(request) {

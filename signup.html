@@ -92,7 +92,7 @@
                     return
             }
             $.post('./signup', hash).then((res) => {
-                console.log(res)
+               window.location.href = '/signin'
             }, (err) => {
                 console.log(err)
                 // let errorObj = JSON.parse(err.responseText)
